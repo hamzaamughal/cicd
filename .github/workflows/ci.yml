@@ -67,3 +67,36 @@ jobs:
 
       - name: Deploy to Vercel (production)
         run: vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
+
+  # Builds the Dockerfile and pushes the image to GitHub Container Registry
+  # (ghcr.io). Runs in parallel with `deploy` — separate learning exercise,
+  # not required for the Vercel deploy to work. Proves the same Dockerfile
+  # you tested locally also builds cleanly on a clean CI machine.
+  docker:
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      # GITHUB_TOKEN is auto-generated per run, no secret to create yourself
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/cicd-learn:latest
+            ghcr.io/${{ github.repository_owner }}/cicd-learn:${{ github.sha }}
