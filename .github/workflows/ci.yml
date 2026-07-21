@@ -33,6 +33,10 @@ jobs:
       - name: Lint
         run: npm run lint
 
-      # 5. Fail the pipeline if the app doesn't build
+      # 5. Fail the pipeline if a test assertion is wrong
+      - name: Test
+        run: npm run test
+
+      # 6. Fail the pipeline if the app doesn't build
       - name: Build
         run: npm run build
