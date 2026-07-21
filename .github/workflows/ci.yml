@@ -1,0 +1,38 @@
+name: CI
+
+# When this pipeline runs:
+# - every push to main
+# - every pull request targeting main
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Get the code onto the runner
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      # 2. Install Node.js (cache npm deps between runs for speed)
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      # 3. Install exact versions from package-lock.json (reproducible, unlike npm install)
+      - name: Install dependencies
+        run: npm ci
+
+      # 4. Fail the pipeline if there's a lint error
+      - name: Lint
+        run: npm run lint
+
+      # 5. Fail the pipeline if the app doesn't build
+      - name: Build
+        run: npm run build
